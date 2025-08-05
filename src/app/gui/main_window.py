@@ -1,8 +1,9 @@
 import sys
-from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QSizePolicy, QLabel, QFileDialog, QHBoxLayout, QVBoxLayout, QPushButton
+from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy,
+                               QLabel, QHBoxLayout, QVBoxLayout, QPushButton)
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QPixmap, Qt, QPainter, QPen, QGradient, QColor
-
+from PySide6.QtGui import Qt
+from canvas import Canvas
 MINIMAL_SIZE = QSize(600, 500)
 
 class Painter(QMainWindow):
@@ -20,18 +21,21 @@ class Painter(QMainWindow):
         paint_widget = QWidget()
         paint_widget.setStyleSheet("background-color: #bcf1ff")
 
-        self.canvas = QWidget(paint_widget)
-        self.canvas.setMinimumSize(QSize(300, 300))
-        self.canvas.setStyleSheet("background-color: #ffffff")
+        self.canvas = Canvas(parent=paint_widget)
         self.canvas.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         # Buttons for paint actions/options
         self.pen_size_btn = QPushButton("Pen size")
         self.pen_size_btn.setStyleSheet("background-color: orange; color:black")
+
         self.save_btn = QPushButton("&Save")
         self.save_btn.setStyleSheet("background-color: orange; color:black")
+        self.save_btn.clicked.connect(self.canvas.save)
+
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setStyleSheet("background-color: orange; color:black")
+        self.clear_btn.clicked.connect(self.canvas.clear)
+
         paint_options = QHBoxLayout()
         paint_options.addWidget(self.pen_size_btn)
         paint_options.addWidget(self.save_btn)
@@ -41,6 +45,7 @@ class Painter(QMainWindow):
         paint_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         paint_layout.addWidget(self.canvas)
         paint_layout.addLayout(paint_options)
+
         paint_widget.setLayout(paint_layout)
 
         # Digit probabilities side
