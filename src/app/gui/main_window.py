@@ -1,6 +1,6 @@
 import sys
-from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy,
-                               QLabel, QHBoxLayout, QVBoxLayout, QPushButton)
+from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy, QSlider,
+                               QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QFileDialog)
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import Qt
 from canvas import Canvas
@@ -12,6 +12,7 @@ class Painter(QMainWindow):
         # Window setup
         self.setMinimumSize(MINIMAL_SIZE)
         self.setWindowTitle("ScribbleRecognizer")
+        self.statusBar()
 
         main_widget = QWidget()
         self.main_layout = QHBoxLayout(main_widget)
@@ -25,19 +26,16 @@ class Painter(QMainWindow):
         self.canvas.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         # Buttons for paint actions/options
-        self.pen_size_btn = QPushButton("Pen size")
-        self.pen_size_btn.setStyleSheet("background-color: orange; color:black")
 
         self.save_btn = QPushButton("&Save")
         self.save_btn.setStyleSheet("background-color: orange; color:black")
-        self.save_btn.clicked.connect(self.canvas.save)
+        self.save_btn.clicked.connect(self.save_canvas)
 
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setStyleSheet("background-color: orange; color:black")
         self.clear_btn.clicked.connect(self.canvas.clear)
 
         paint_options = QHBoxLayout()
-        paint_options.addWidget(self.pen_size_btn)
         paint_options.addWidget(self.save_btn)
         paint_options.addWidget(self.clear_btn)
 
@@ -61,6 +59,12 @@ class Painter(QMainWindow):
         self.main_layout.addWidget(paint_widget, 2)
         self.main_layout.addWidget(digit_guesses, 1)
         self.setCentralWidget(main_widget)
+
+    def save_canvas(self):
+        filePath, _ = QFileDialog.getSaveFileName(self, caption="caption", dir="../../..")
+        filename = filePath.split("/")[-1]
+        self.canvas.save(filePath)
+        self.statusBar().showMessage(f"Canvas was saved to {filename}.png", timeout=1500)
 
 
 if __name__ == '__main__':

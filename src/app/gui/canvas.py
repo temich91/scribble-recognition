@@ -1,3 +1,5 @@
+from fileinput import filename
+
 from PySide6.QtWidgets import QLabel
 from PySide6.QtCore import QSize, Qt, QIODevice, QBuffer
 from PySide6.QtGui import QPainter, QPixmap, QColor, QPen
@@ -20,9 +22,8 @@ class Canvas(QLabel):
         self.pen.setWidth(12)
         self.pen.setCapStyle(Qt.PenCapStyle.RoundCap)
 
-    def save(self):
-        self.pixmap.save("canvas.png", "PNG")
-        print('saved')
+    def save(self, filePath):
+        self.pixmap.save(f"{filePath}.png", "PNG")
 
     def clear(self):
         self.pixmap.fill(QColor("white"))
