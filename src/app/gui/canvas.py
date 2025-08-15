@@ -1,8 +1,8 @@
-from fileinput import filename
-
+import torch
 from PySide6.QtWidgets import QLabel
 from PySide6.QtCore import QSize, Qt, QIODevice, QBuffer
-from PySide6.QtGui import QPainter, QPixmap, QColor, QPen
+from PySide6.QtGui import QPainter, QPixmap, QColor, QPen, QImage
+import numpy as np
 
 MIN_SIZE = QSize(300, 300)
 
@@ -21,6 +21,12 @@ class Canvas(QLabel):
         self.pen.setColor(QColor("black"))
         self.pen.setWidth(12)
         self.pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+
+    def convertToTensor(self):
+        pixmapImg = self.pixmap.toImage().convertToFormat(QImage.Format.Format_Grayscale8)
+        buf = pixmapImg.bits().tobytes()
+        pixmapArray = (np.frombuffer(buf, dtype=np.uint8).reshape((1, self.pixmap.width(), self.pixmap.height())))
+        return torch.tensor(pixmapArray)
 
     def save(self, filePath):
         self.pixmap.save(f"{filePath}.png", "PNG")

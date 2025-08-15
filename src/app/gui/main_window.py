@@ -1,4 +1,7 @@
 import sys
+import torch
+import torchvision.io
+import torchvision.transforms as tfs
 from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy, QSlider,
                                QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QFileDialog)
 from PySide6.QtCore import QSize, Qt
@@ -29,7 +32,8 @@ class Painter(QMainWindow):
 
         self.save_btn = QPushButton("&Save")
         self.save_btn.setStyleSheet("background-color: orange; color:black")
-        self.save_btn.clicked.connect(self.save_canvas)
+        # self.save_btn.clicked.connect(self.save_canvas)
+        self.save_btn.clicked.connect(self.getDigitTensor)
 
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setStyleSheet("background-color: orange; color:black")
@@ -59,6 +63,23 @@ class Painter(QMainWindow):
         self.main_layout.addWidget(paint_widget, 2)
         self.main_layout.addWidget(digit_guesses, 1)
         self.setCentralWidget(main_widget)
+
+    def getDigitTensor(self):
+        imgTensor = self.canvas.convertToTensor()
+        imgTensor = 255.0 - imgTensor
+        _, rows, cols = imgTensor.nonzero(as_tuple=True)
+        # Boundaries of the figure in the drawing
+        minRow, maxRow = rows.min(), rows.max()
+        minCol, maxCol = cols.min(), cols.max()
+        croppedTensor = imgTensor[:, minRow: maxRow + 1, minCol: maxCol + 1]
+
+        transform = tfs.Resize((28, 28))
+        padding = torch.nn.ConstantPad2d(padding=16, value=0)
+        resultTensor = padding(croppedTensor)
+        resultTensor = transform(resultTensor).to(dtype=torch.uint8)
+        torchvision.io.write_png(resultTensor, "../../../converted.png", 0)
+        print("Saved")
+        return
 
     def save_canvas(self):
         filePath, _ = QFileDialog.getSaveFileName(self, caption="caption", dir="../../..")
