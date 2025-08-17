@@ -7,62 +7,69 @@ from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy, 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import Qt
 from canvas import Canvas
+
 MINIMAL_SIZE = QSize(600, 500)
 
-class Painter(QMainWindow):
+class MainWindow(QMainWindow):
+    """Main window class.
+    """
     def __init__(self):
+        """ Initialize window properties and layout.
+
+        """
         super().__init__()
         # Window setup
         self.setMinimumSize(MINIMAL_SIZE)
         self.setWindowTitle("ScribbleRecognizer")
         self.statusBar()
 
-        main_widget = QWidget()
-        self.main_layout = QHBoxLayout(main_widget)
-        self.main_layout.setSpacing(0)
+        mainWidget = QWidget()
+        self.mainLayout = QHBoxLayout(mainWidget)
+        self.mainLayout.setSpacing(0)
 
         # Digit drawing side
-        paint_widget = QWidget()
-        paint_widget.setStyleSheet("background-color: #bcf1ff")
+        paintWidget = QWidget()
+        paintWidget.setStyleSheet("background-color: #bcf1ff")
 
-        self.canvas = Canvas(parent=paint_widget)
+        self.canvas = Canvas(parent=paintWidget)
         self.canvas.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         # Buttons for paint actions/options
-
-        self.save_btn = QPushButton("&Save")
-        self.save_btn.setStyleSheet("background-color: orange; color:black")
+        self.saveBtn = QPushButton("&Save")
+        self.saveBtn.setStyleSheet("background-color: orange; color:black")
         # self.save_btn.clicked.connect(self.save_canvas)
-        self.save_btn.clicked.connect(self.getDigitTensor)
+        self.saveBtn.clicked.connect(self.getDigitTensor)
 
-        self.clear_btn = QPushButton("Clear")
-        self.clear_btn.setStyleSheet("background-color: orange; color:black")
-        self.clear_btn.clicked.connect(self.canvas.clear)
+        self.clearBtn = QPushButton("Clear")
+        self.clearBtn.setStyleSheet("background-color: orange; color:black")
+        self.clearBtn.clicked.connect(self.canvas.clear)
 
-        paint_options = QHBoxLayout()
-        paint_options.addWidget(self.save_btn)
-        paint_options.addWidget(self.clear_btn)
+        # Layouts
+        paintOptions = QHBoxLayout()
+        paintOptions.addWidget(self.saveBtn)
+        paintOptions.addWidget(self.clearBtn)
 
-        paint_layout = QVBoxLayout()
-        paint_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        paint_layout.addWidget(self.canvas)
-        paint_layout.addLayout(paint_options)
+        paintLayout = QVBoxLayout()
+        paintLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        paintLayout.addWidget(self.canvas)
+        paintLayout.addLayout(paintOptions)
 
-        paint_widget.setLayout(paint_layout)
+        paintWidget.setLayout(paintLayout)
 
         # Digit probabilities side
-        digit_guesses = QWidget()
-        digit_guesses.setStyleSheet("background-color: #a2cfdb; color: black; font-size: 18px;")
-        digits_layout = QVBoxLayout()
-        self.digits_probability = {}
-        for i in range(10):
-            self.digits_probability[i] = QLabel(f"{i}:")
-            digits_layout.addWidget(self.digits_probability[i])
-        digit_guesses.setLayout(digits_layout)
+        digitGuesses = QWidget()
+        digitGuesses.setStyleSheet("background-color: #a2cfdb; color: black; font-size: 18px;")
+        digitsLayout = QVBoxLayout()
 
-        self.main_layout.addWidget(paint_widget, 2)
-        self.main_layout.addWidget(digit_guesses, 1)
-        self.setCentralWidget(main_widget)
+        self.digitsProbability = {}
+        for i in range(10):
+            self.digitsProbability[i] = QLabel(f"{i}:")
+            digitsLayout.addWidget(self.digitsProbability[i])
+        digitGuesses.setLayout(digitsLayout)
+
+        self.mainLayout.addWidget(paintWidget, 2)
+        self.mainLayout.addWidget(digitGuesses, 1)
+        self.setCentralWidget(mainWidget)
 
     def getDigitTensor(self):
         imgTensor = self.canvas.convertToTensor()
@@ -73,15 +80,20 @@ class Painter(QMainWindow):
         minCol, maxCol = cols.min(), cols.max()
         croppedTensor = imgTensor[:, minRow: maxRow + 1, minCol: maxCol + 1]
 
+        # Convert to MNIST format
         transform = tfs.Resize((28, 28))
         padding = torch.nn.ConstantPad2d(padding=16, value=0)
         resultTensor = padding(croppedTensor)
         resultTensor = transform(resultTensor).to(dtype=torch.uint8)
         torchvision.io.write_png(resultTensor, "../../../converted.png", 0)
         print("Saved")
-        return
 
-    def save_canvas(self):
+    def save_canvas(self) -> None:
+        """Save canvas to png with file dialog.
+
+        Returns:
+            None.
+        """
         filePath, _ = QFileDialog.getSaveFileName(self, caption="caption", dir="../../..")
         filename = filePath.split("/")[-1]
         self.canvas.save(filePath)
@@ -90,6 +102,6 @@ class Painter(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = Painter()
+    window = MainWindow()
     window.show()
     app.exec()
