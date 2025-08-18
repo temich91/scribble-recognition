@@ -73,7 +73,6 @@ class MainWindow(QMainWindow):
 
     def getDigitTensor(self):
         imgTensor = self.canvas.convertToTensor()
-        imgTensor = 255.0 - imgTensor
         _, rows, cols = imgTensor.nonzero(as_tuple=True)
         # Boundaries of the figure in the drawing
         minRow, maxRow = rows.min(), rows.max()

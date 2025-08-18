@@ -25,12 +25,12 @@ class Canvas(QLabel):
         self.previous_point = None
 
         self.pixmap = QPixmap(MIN_SIZE)
-        self.pixmap.fill(QColor("white"))
+        self.pixmap.fill(QColor("black"))
         self.setPixmap(self.pixmap)
         self.resize(self.pixmap.width(), self.pixmap.height())
 
         self.pen = QPen()
-        self.pen.setColor(QColor("black"))
+        self.pen.setColor(QColor("white"))
         self.pen.setWidth(12)
         self.pen.setCapStyle(Qt.PenCapStyle.RoundCap)
 
@@ -59,7 +59,7 @@ class Canvas(QLabel):
         Returns:
             None.
         """
-        self.pixmap.fill(QColor("white"))
+        self.pixmap.fill(QColor("black"))
         self.setPixmap(self.pixmap)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
