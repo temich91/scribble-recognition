@@ -2,13 +2,13 @@ import sys
 import torch
 import torchvision.io
 import torchvision.transforms as tfs
-from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy, QSlider,
+from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy, QProgressBar,
                                QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QFileDialog)
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import Qt
 from canvas import Canvas
 
-MINIMAL_SIZE = QSize(600, 500)
+MINIMAL_SIZE = QSize(500, 380)
 
 class MainWindow(QMainWindow):
     """Main window class.
@@ -18,6 +18,7 @@ class MainWindow(QMainWindow):
 
         """
         super().__init__()
+        # self.setWindowFlags(Qt.FramelessWindowHint)
         # Window setup
         self.setMinimumSize(MINIMAL_SIZE)
         self.setWindowTitle("ScribbleRecognizer")
@@ -29,20 +30,19 @@ class MainWindow(QMainWindow):
 
         # Digit drawing side
         paintWidget = QWidget()
-        paintWidget.setStyleSheet("background-color: #bcf1ff")
 
         self.canvas = Canvas(parent=paintWidget)
+        self.canvas.setObjectName("canvas")
         self.canvas.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         # Buttons for paint actions/options
         self.saveBtn = QPushButton("&Save")
-        self.saveBtn.setStyleSheet("background-color: orange; color:black")
         # self.save_btn.clicked.connect(self.save_canvas)
         self.saveBtn.clicked.connect(self.getDigitTensor)
 
         self.clearBtn = QPushButton("Clear")
-        self.clearBtn.setStyleSheet("background-color: orange; color:black")
-        self.clearBtn.clicked.connect(self.canvas.clear)
+        # self.clearBtn.clicked.connect(self.canvas.clear)
+        self.clearBtn.clicked.connect(self.setRandomProbs)
 
         # Layouts
         paintOptions = QHBoxLayout()
@@ -58,18 +58,24 @@ class MainWindow(QMainWindow):
 
         # Digit probabilities side
         digitGuesses = QWidget()
-        digitGuesses.setStyleSheet("background-color: #a2cfdb; color: black; font-size: 18px;")
         digitsLayout = QVBoxLayout()
 
         self.digitsProbability = {}
         for i in range(10):
-            self.digitsProbability[i] = QLabel(f"{i}:")
-            digitsLayout.addWidget(self.digitsProbability[i])
+            self.digitsProbability[i] = QHBoxLayout()
+            self.digitsProbability[i].addWidget(QLabel(f"{i}"))
+            self.digitsProbability[i].addWidget(QProgressBar())
+            digitsLayout.addLayout(self.digitsProbability[i])
         digitGuesses.setLayout(digitsLayout)
 
         self.mainLayout.addWidget(paintWidget, 2)
         self.mainLayout.addWidget(digitGuesses, 1)
         self.setCentralWidget(mainWidget)
+
+    def setRandomProbs(self):
+        import random
+        for i in range(10):
+            self.digitsProbability[i].itemAt(1).widget().setValue(random.random() * 100)
 
     def getDigitTensor(self):
         imgTensor = self.canvas.convertToTensor()
@@ -101,6 +107,9 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    with open("style.qss", "r") as f:
+        _style = f.read()
+        app.setStyleSheet(_style)
     window = MainWindow()
     window.show()
     app.exec()

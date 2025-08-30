@@ -1,0 +1,37 @@
+QPushButton {
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 3px;
+    border-color: #000000;
+    background-color: #ffffff;
+    color: #000000;
+}
+
+QLabel {
+    font-size: 18px;
+}
+
+QProgressBar {
+    border-style: solid;
+    border-width: 1px;
+    text-align: center;
+    text-size: 8px;
+    min-height: 10px;
+    max-height: 10px;
+    background-color: #ffffff;
+}
+
+QProgressBar::chunk {
+    background-color: #31b0f6;
+}
+
+QWidget {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+QWidget #canvas {
+    border-style: solid;
+    border-width: 3px;
+    border-color: #000000;
+}
