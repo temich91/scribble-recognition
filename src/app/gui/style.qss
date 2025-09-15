@@ -35,3 +35,8 @@ QWidget #canvas {
     border-width: 3px;
     border-color: #000000;
 }
+
+QWidget #title_bar {
+    background-color: red;
+    color: #000000;
+}

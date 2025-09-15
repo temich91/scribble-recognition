@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy, 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import Qt
 from canvas import Canvas
+from title_bar import TitleBar
 
 MINIMAL_SIZE = QSize(500, 380)
 
@@ -18,15 +19,13 @@ class MainWindow(QMainWindow):
 
         """
         super().__init__()
-        # self.setWindowFlags(Qt.FramelessWindowHint)
         # Window setup
         self.setMinimumSize(MINIMAL_SIZE)
         self.setWindowTitle("ScribbleRecognizer")
+        self.setWindowFlags(Qt.FramelessWindowHint)
         self.statusBar()
 
         mainWidget = QWidget()
-        self.mainLayout = QHBoxLayout(mainWidget)
-        self.mainLayout.setSpacing(0)
 
         # Digit drawing side
         paintWidget = QWidget()
@@ -53,7 +52,6 @@ class MainWindow(QMainWindow):
         paintLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         paintLayout.addWidget(self.canvas)
         paintLayout.addLayout(paintOptions)
-
         paintWidget.setLayout(paintLayout)
 
         # Digit probabilities side
@@ -68,9 +66,30 @@ class MainWindow(QMainWindow):
             digitsLayout.addLayout(self.digitsProbability[i])
         digitGuesses.setLayout(digitsLayout)
 
-        self.mainLayout.addWidget(paintWidget, 2)
-        self.mainLayout.addWidget(digitGuesses, 1)
+        self.contentLayout = QHBoxLayout()
+        self.contentLayout.addWidget(paintWidget, 2)
+        self.contentLayout.addWidget(digitGuesses, 1)
+
+        self.mainLayout = QVBoxLayout(mainWidget)
+        self.mainLayout.setSpacing(0)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+
+        self.titleBar = TitleBar()
+        self.titleBar.minimizeBtn.clicked.connect(self.minimize)
+        self.titleBar.maximizeBtn.clicked.connect(self.maximize)
+        self.titleBar.closeBtn.clicked.connect(self.close)
+
+        self.mainLayout.addWidget(self.titleBar)
+        self.mainLayout.addLayout(self.contentLayout)
         self.setCentralWidget(mainWidget)
+
+    def minimize(self):
+        self.titleBar.maximizeBtn.setText("🗖")
+        self.showMinimized()
+
+    def maximize(self):
+        self.titleBar.maximizeBtn.setText("🗗")
+        self.showMaximized()
 
     def setRandomProbs(self):
         import random
