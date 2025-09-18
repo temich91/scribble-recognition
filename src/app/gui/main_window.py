@@ -1,6 +1,5 @@
 import sys
 import torch
-import torchvision.io
 import torchvision.transforms as tfs
 from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy, QProgressBar,
                                QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QFileDialog)
@@ -19,6 +18,9 @@ class MainWindow(QMainWindow):
 
         """
         super().__init__()
+
+        # self.model = ConvNet().load_state_dict(torch.load("../model/models/cnn.pt", weights_only=True))
+
         # Window setup
         self.setMinimumSize(MINIMAL_SIZE)
         self.setWindowTitle("ScribbleRecognizer")
@@ -33,11 +35,12 @@ class MainWindow(QMainWindow):
         self.canvas = Canvas(parent=paintWidget)
         self.canvas.setObjectName("canvas")
         self.canvas.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.canvas.changed.connect(self.predictProbas)
 
         # Buttons for paint actions/options
         self.saveBtn = QPushButton("&Save")
-        # self.save_btn.clicked.connect(self.save_canvas)
-        self.saveBtn.clicked.connect(self.getDigitTensor)
+        self.saveBtn.clicked.connect(self.saveCanvas)
+        # self.saveBtn.clicked.connect(self.getDigitTensor)
 
         self.clearBtn = QPushButton("Clear")
         # self.clearBtn.clicked.connect(self.canvas.clear)
@@ -108,11 +111,14 @@ class MainWindow(QMainWindow):
         transform = tfs.Resize((28, 28))
         padding = torch.nn.ConstantPad2d(padding=16, value=0)
         resultTensor = padding(croppedTensor)
-        resultTensor = transform(resultTensor).to(dtype=torch.uint8)
-        torchvision.io.write_png(resultTensor, "../../../converted.png", 0)
-        print("Saved")
+        return transform(resultTensor).to(dtype=torch.uint8)
 
-    def save_canvas(self) -> None:
+    def predictProbas(self):
+        data = self.getDigitTensor()
+        pred = self.model(data)
+        print(pred)
+
+    def saveCanvas(self) -> None:
         """Save canvas to png with file dialog.
 
         Returns:

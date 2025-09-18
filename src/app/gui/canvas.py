@@ -1,16 +1,18 @@
 import torch
 from PySide6.QtWidgets import QLabel
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal, Slot
 from PySide6.QtGui import QPainter, QPixmap, QColor, QPen, QImage, QMouseEvent
 import numpy as np
 
 MIN_SIZE = QSize(300, 300)
+CHANGES_DELTA = 30
 
 class Canvas(QLabel):
     """Provides a widget for drawing figures on.
 
     Represents pixmap-pen pair
     """
+    changed = Signal()
     def __init__(self, parent=None):
         """Initialize canvas.
 
@@ -21,6 +23,8 @@ class Canvas(QLabel):
         """
 
         super().__init__(parent)
+        self.changes = 0
+
         self.setScaledContents(True)
         self.previous_point = None
 
@@ -87,6 +91,11 @@ class Canvas(QLabel):
         # Update pixmap
         self.setPixmap(self.pixmap)
         self.previous_point = cursorPos
+
+        self.changes += 1
+        if self.changes % CHANGES_DELTA == 0:
+            self.changes = 0
+            self.changed.emit()
 
     def mouseReleaseEvent(self, event) -> None:
         """Handle mouse left button release.
