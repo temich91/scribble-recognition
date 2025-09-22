@@ -84,6 +84,7 @@ class MainWindow(QMainWindow):
 
         self.mainLayout.addWidget(self.titleBar)
         self.mainLayout.addLayout(self.contentLayout)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.setCentralWidget(mainWidget)
 
     def minimize(self):

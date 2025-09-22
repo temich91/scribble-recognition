@@ -1,4 +1,5 @@
 QPushButton {
+    font-size: 12px;
     border-style: solid;
     border-width: 1px;
     border-radius: 3px;
@@ -7,8 +8,36 @@ QPushButton {
     color: #000000;
 }
 
+QPushButton::hover {
+    font-size: 12px;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 3px;
+    border-color: #000000;
+    background-color: #acdcf6;
+    color: #000000;
+}
+
+QPushButton#titleBtn {
+    font-size: 16px;
+    border-style: solid;
+    border-width: 0px;
+    border-color: #000000;
+    background-color: #ffffff;
+    color: #000000;
+}
+
+QPushButton#titleBtn::hover {
+    font-size: 16px;
+    border-style: solid;
+    border-width: 0px;
+    border-color: #000000;
+    background-color: #acdcf6;
+    color: #000000;
+}
+
 QLabel {
-    font-size: 18px;
+    font-size: 16px;
 }
 
 QProgressBar {
@@ -27,16 +56,5 @@ QProgressBar::chunk {
 
 QWidget {
     background-color: #ffffff;
-    color: #000000;
-}
-
-QWidget #canvas {
-    border-style: solid;
-    border-width: 3px;
-    border-color: #000000;
-}
-
-QWidget #title_bar {
-    background-color: red;
     color: #000000;
 }
