@@ -6,6 +6,8 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 import torchvision.transforms.v2 as tfs
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 MODELS_PATH = "models"
 to_tensor_tf = tfs.Compose([tfs.ToImage(), tfs.ToDtype(torch.float32, scale=True)])
 
@@ -60,6 +62,8 @@ def train_model(model, train_data, verbose=True):
         epoch_loss = 0.0
         for i, data in enumerate(train_loader):
             inputs, labels = data
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = loss_function(outputs, labels)
@@ -88,6 +92,8 @@ def test(model: ConvNet, test_data):
     with torch.no_grad():
         for data in test_loader:
             inputs, true = data
+            inputs = inputs.to(device)
+            true = true.to(device)
             outputs = model(inputs)
             _, pred = torch.max(outputs, dim=1)
             correct += (pred == true).sum().item()
