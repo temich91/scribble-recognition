@@ -5,7 +5,7 @@ from PySide6.QtGui import QPainter, QPixmap, QColor, QPen, QImage, QMouseEvent
 import numpy as np
 
 MIN_SIZE = QSize(300, 300)
-CHANGES_DELTA = 30
+CHANGES_DELTA = 10
 
 class Canvas(QLabel):
     """Provides a widget for drawing figures on.

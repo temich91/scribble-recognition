@@ -1,5 +1,6 @@
 import sys
 import torch
+import torch.nn.functional as F
 import torchvision.transforms.v2 as tfs
 from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy, QProgressBar,
                                QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QFileDialog)
@@ -35,6 +36,7 @@ class ConvNet(nn.Module):
         x = self.fc2(x)
         return x
 
+
 class MainWindow(QMainWindow):
     """Main window class.
     """
@@ -68,7 +70,7 @@ class MainWindow(QMainWindow):
         # self.saveBtn.clicked.connect(self.getDigitTensor)
 
         self.clearBtn = QPushButton("Clear")
-        self.clearBtn.clicked.connect(self.canvas.clear)
+        self.clearBtn.clicked.connect(self.clearCanvas)
 
         # Layouts
         paintOptions = QHBoxLayout()
@@ -136,10 +138,10 @@ class MainWindow(QMainWindow):
 
     def predictProbas(self):
         data = self.getDigitTensor()
-        pred = self.model(data).argmax().item()
-        self.digitsProbability[self.lastPred].itemAt(1).widget().setValue(0)
-        self.digitsProbability[pred].itemAt(1).widget().setValue(100)
-        self.lastPred = pred
+        pred = self.model(data)
+        probas = F.softmax(pred, dim=0)
+        for digit, value in enumerate(probas):
+            self.digitsProbability[digit].itemAt(1).widget().setValue(round(value.item(), 3) * 100)
 
     def saveCanvas(self) -> None:
         """Save canvas to png with file dialog.
@@ -152,6 +154,10 @@ class MainWindow(QMainWindow):
         self.canvas.save(filePath)
         self.statusBar().showMessage(f"Canvas was saved to {filename}.png", timeout=1500)
 
+    def clearCanvas(self):
+        self.canvas.clear()
+        for i in range(10):
+            self.digitsProbability[i].itemAt(1).widget().setValue(0)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
