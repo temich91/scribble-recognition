@@ -1,6 +1,6 @@
 import sys
 import torch
-import torchvision.transforms as tfs
+import torchvision.transforms.v2 as tfs
 from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QSizePolicy, QProgressBar,
                                QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QFileDialog)
 from PySide6.QtCore import QSize, Qt
@@ -9,6 +9,31 @@ from canvas import Canvas
 from title_bar import TitleBar
 
 MINIMAL_SIZE = QSize(500, 380)
+
+import torch.nn as nn
+import torch.nn.functional as f
+
+MODELS_PATH = "models"
+BATCH_SIZE = 16
+
+
+class ConvNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=5, stride=1)  # (1, 28, 28) -> (16, 24, 24)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)  # (16, 24, 24) -> (16, 12, 12)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1)  # (16, 12, 12) -> (32, 10, 10)
+        # pool2 (32, 10, 10) -> (32, 5, 5)
+        self.fc1 = nn.Linear(32 * 5 * 5, 130)  # (800, 130)
+        self.fc2 = nn.Linear(130, 10)
+
+    def forward(self, x):
+        x = self.pool(f.relu(self.conv1(x)))  # (1, 28, 28) -> (16, 24, 24) -> (16, 12, 12)
+        x = self.pool(f.relu(self.conv2(x)))  # (16, 12, 12) -> (32, 10, 10) -> (32, 5, 5)
+        x = x.flatten()  # (32, 5, 5) -> (32, 25)
+        x = f.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
 
 class MainWindow(QMainWindow):
     """Main window class.
@@ -19,8 +44,8 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
 
-        # self.model = ConvNet().load_state_dict(torch.load("../model/models/cnn.pt", weights_only=True))
-
+        self.model = ConvNet()
+        self.model.load_state_dict(torch.load("../model/models/cnn.pt", weights_only=True))
         # Window setup
         self.setMinimumSize(MINIMAL_SIZE)
         self.setWindowTitle("ScribbleRecognizer")
@@ -43,8 +68,7 @@ class MainWindow(QMainWindow):
         # self.saveBtn.clicked.connect(self.getDigitTensor)
 
         self.clearBtn = QPushButton("Clear")
-        # self.clearBtn.clicked.connect(self.canvas.clear)
-        self.clearBtn.clicked.connect(self.setRandomProbs)
+        self.clearBtn.clicked.connect(self.canvas.clear)
 
         # Layouts
         paintOptions = QHBoxLayout()
@@ -61,6 +85,7 @@ class MainWindow(QMainWindow):
         digitGuesses = QWidget()
         digitsLayout = QVBoxLayout()
 
+        self.lastPred = 0
         self.digitsProbability = {}
         for i in range(10):
             self.digitsProbability[i] = QHBoxLayout()
@@ -95,11 +120,6 @@ class MainWindow(QMainWindow):
         self.titleBar.maximizeBtn.setText("🗗")
         self.showMaximized()
 
-    def setRandomProbs(self):
-        import random
-        for i in range(10):
-            self.digitsProbability[i].itemAt(1).widget().setValue(random.random() * 100)
-
     def getDigitTensor(self):
         imgTensor = self.canvas.convertToTensor()
         _, rows, cols = imgTensor.nonzero(as_tuple=True)
@@ -112,12 +132,14 @@ class MainWindow(QMainWindow):
         transform = tfs.Resize((28, 28))
         padding = torch.nn.ConstantPad2d(padding=16, value=0)
         resultTensor = padding(croppedTensor)
-        return transform(resultTensor).to(dtype=torch.uint8)
+        return transform(resultTensor).to(dtype=torch.float32)
 
     def predictProbas(self):
         data = self.getDigitTensor()
-        pred = self.model(data)
-        print(pred)
+        pred = self.model(data).argmax().item()
+        self.digitsProbability[self.lastPred].itemAt(1).widget().setValue(0)
+        self.digitsProbability[pred].itemAt(1).widget().setValue(100)
+        self.lastPred = pred
 
     def saveCanvas(self) -> None:
         """Save canvas to png with file dialog.
@@ -133,8 +155,8 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    with open("style.qss", "r") as f:
-        _style = f.read()
+    with open("style.qss", "r") as styles_file:
+        _style = styles_file.read()
         app.setStyleSheet(_style)
     window = MainWindow()
     window.show()
